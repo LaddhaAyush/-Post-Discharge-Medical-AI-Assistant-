@@ -1,0 +1,36 @@
+2025-07-02 14:45:26,376 - __main__ - INFO - main:145 - Initializing AI agents...
+2025-07-02 14:45:26,903 - root - INFO - _initialize_llm:34 - Receptionist Agent: LLM initialized successfully
+2025-07-02 14:45:26,903 - __main__ - INFO - main:149 - Receptionist Agent initialized successfully
+2025-07-02 14:45:27,094 - sentence_transformers.SentenceTransformer - INFO - __init__:211 - Use pytorch device_name: cpu
+2025-07-02 14:45:27,094 - sentence_transformers.SentenceTransformer - INFO - __init__:219 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-02 14:45:31,178 - root - INFO - _load_components:49 - Clinical Agent components loaded successfully
+2025-07-02 14:45:31,178 - __main__ - INFO - main:157 - Clinical Agent initialized successfully
+2025-07-02 14:45:31,187 - __main__ - INFO - main:169 - Session started - All systems ready
+2025-07-02 14:45:34,313 - __main__ - INFO - main:214 - Processing interaction #1 with receptionist agent
+2025-07-02 14:45:34,313 - root - INFO - interact:210 - Receptionist Agent - State: greeting, Input: Susan white...
+2025-07-02 14:45:34,314 - root - INFO - get_patient_report:30 - Patient found: Susan White
+2025-07-02 14:45:34,833 - root - INFO - _handle_greeting:251 - Patient found and welcomed: Susan White
+2025-07-02 14:45:43,913 - __main__ - INFO - main:214 - Processing interaction #2 with receptionist agent
+2025-07-02 14:45:43,913 - root - INFO - interact:210 - Receptionist Agent - State: patient_care, Input: I have a problem...
+2025-07-02 14:45:54,876 - __main__ - INFO - main:214 - Processing interaction #3 with receptionist agent
+2025-07-02 14:45:54,876 - root - INFO - interact:210 - Receptionist Agent - State: patient_care, Input: i am having chest pain...
+2025-07-02 14:45:55,323 - root - INFO - set_patient_report:104 - Clinical Agent: Patient context set for Susan White
+2025-07-02 14:45:55,323 - __main__ - INFO - main:233 - Agent handoff: Receptionist -> Clinical
+2025-07-02 14:46:11,401 - __main__ - INFO - main:214 - Processing interaction #4 with clinical agent
+2025-07-02 14:46:11,401 - root - INFO - interact:204 - Clinical Agent processing: I am having swelling in legs....
+2025-07-02 14:46:11,433 - root - INFO - retrieve_from_rag:134 - RAG retrieval: Found 3 relevant chunks
+2025-07-02 14:46:12,449 - root - INFO - interact:261 - Clinical Agent: Response generated successfully
+2025-07-02 14:46:40,520 - __main__ - INFO - main:214 - Processing interaction #5 with clinical agent
+2025-07-02 14:46:40,520 - root - INFO - interact:204 - Clinical Agent processing: there is blood in urine ? what is cause of it ....
+2025-07-02 14:46:40,542 - root - INFO - retrieve_from_rag:134 - RAG retrieval: Found 3 relevant chunks
+2025-07-02 14:46:41,795 - root - INFO - interact:261 - Clinical Agent: Response generated successfully
+2025-07-02 14:47:47,456 - __main__ - INFO - main:214 - Processing interaction #6 with clinical agent
+2025-07-02 14:47:47,456 - root - INFO - interact:204 - Clinical Agent processing: What medications should i take ?...
+2025-07-02 14:47:47,468 - root - INFO - retrieve_from_rag:134 - RAG retrieval: Found 3 relevant chunks
+2025-07-02 14:47:48,710 - root - INFO - interact:261 - Clinical Agent: Response generated successfully
+2025-07-02 14:48:43,465 - __main__ - INFO - main:214 - Processing interaction #7 with clinical agent
+2025-07-02 14:48:43,466 - root - INFO - interact:204 - Clinical Agent processing: ok i will take care of it .Thanks for your guidance ....
+2025-07-02 14:48:43,489 - root - INFO - retrieve_from_rag:134 - RAG retrieval: Found 3 relevant chunks
+2025-07-02 14:48:44,639 - root - INFO - interact:261 - Clinical Agent: Response generated successfully
+2025-07-02 14:48:58,287 - __main__ - INFO - main:188 - Session ended by user command
+2025-07-02 14:48:58,287 - __main__ - INFO - main:267 - Session completed - Duration: 0:03:27.099609, Interactions: 7

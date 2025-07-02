@@ -1,0 +1,37 @@
+# Core GenAI + RAG stack
+langchain
+langgraph
+langchain-community
+langchainhub
+sentence-transformers
+qdrant-client
+faiss-cpu
+beautifulsoup4
+requests
+
+# LLMs and API integrations
+langchain-groq
+tavily-python
+
+# Data processing
+pypdf
+unstructured
+python-docx
+pandas
+jsonlines
+
+# UI
+streamlit
+
+# Logging, environment
+python-dotenv
+
+# API
+fastapi
+uvicorn
+
+# Web Search API (Optional fallback)
+duckduckgo-search
+requests
+httpx
+tqdm
