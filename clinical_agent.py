@@ -1,281 +1,432 @@
-import logging
-import faiss
-import numpy as np
+# import logging
+# import os
+# import faiss
+# import numpy as np
+# from dotenv import load_dotenv
+# from sentence_transformers import SentenceTransformer
+# from langchain_groq import ChatGroq
+# from langchain_core.prompts import ChatPromptTemplate
+# from langchain_core.output_parsers import StrOutputParser
+# from duckduckgo_search import DDGS
+
+# load_dotenv()
+
+# class ClinicalAgent:
+#     def __init__(self):
+#         self.k = 3
+#         self.patient_report = None
+#         self.index = faiss.read_index("data/nephro_faiss.index")
+#         self.chunks = [chunk.strip() for chunk in open("data/nephro.txt", encoding="utf-8").read().split("\n\n") if chunk.strip()]
+#         self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
+#         self.llm = ChatGroq(api_key=os.getenv("GROQ_API_KEY"), model="llama3-8b-8192")
+#         self.prompt = ChatPromptTemplate.from_template(
+#             """
+# You are Dr. Sarah, a nephrology nurse practitioner. Use the provided patient info and context to respond accurately.
+
+# Patient: {patient_name} | Diagnosis: {diagnosis} | Medications: {medications} | Discharge Date: {discharge_date}
+
+# Context:
+# {context}
+
+# Patient says:
+# {query}
+
+# Reply clearly and empathetically. If using online sources, cite them. For unknowns, recommend professional consultation.
+#             """
+#         )
+
+#     def set_patient_report(self, report):
+#         self.patient_report = report
+
+#     def _rag_context(self, query):
+#         vec = self.embedder.encode([query])
+#         D, I = self.index.search(np.array(vec).astype("float32"), self.k)
+#         return [self.chunks[i] for i in I[0] if i < len(self.chunks)]
+
+#     def _web_search(self, query):
+#         try:
+#             with DDGS() as ddgs:
+#                 results = list(ddgs.text(f"nephrology {query}", max_results=2))
+#                 return [f"{r['title']}: {r['body'][:200]}... (Source: {r['href']})" for r in results if 'title' in r]
+#         except Exception as e:
+#             logging.error(f"Web search failed: {e}")
+#             return ["Web search is currently unavailable."]
+
+#     def _get_context(self, query):
+#         rag_chunks = self._rag_context(query)
+#         joined_context = "\n\n".join(rag_chunks)
+#         if not joined_context or len(joined_context) < 100:
+#             logging.info("RAG insufficient, switching to web search")
+#             return "\n\n".join(self._web_search(query))
+#         return joined_context
+
+#     def interact(self, query):
+#         context = self._get_context(query)
+#         inputs = {
+#             "patient_name": self.patient_report.get("patient_name", "Patient"),
+#             "diagnosis": self.patient_report.get("primary_diagnosis", ""),
+#             "medications": ", ".join(self.patient_report.get("medications", [])),
+#             "discharge_date": self.patient_report.get("discharge_date", ""),
+#             "context": context,
+#             "query": query
+#         }
+#         chain = self.prompt | self.llm | StrOutputParser()
+#         return chain.invoke(inputs).strip()
+
+# import logging
+# import os
+# import faiss
+# import numpy as np
+# from dotenv import load_dotenv
+# from sentence_transformers import SentenceTransformer
+# from langchain_groq import ChatGroq
+# from langchain_core.prompts import ChatPromptTemplate
+# from langchain_core.output_parsers import StrOutputParser
+# from langchain_community.tools import DuckDuckGoSearchResults
+
+# load_dotenv()
+
+# class ClinicalAgent:
+#     def __init__(self):
+#         self.k = 3
+#         self.patient_report = None
+#         self.index = faiss.read_index("data/nephro_faiss.index")
+#         self.chunks = [chunk.strip() for chunk in open("data/nephro.txt", encoding="utf-8").read().split("\n\n") if chunk.strip()]
+#         self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
+#         self.llm = ChatGroq(api_key=os.getenv("GROQ_API_KEY"), model="llama3-8b-8192")
+#         self.web_search = DuckDuckGoSearchResults(output_format="list")
+
+#         self.prompt = ChatPromptTemplate.from_template(
+#             """
+# You are Dr. Sarah, a nephrology nurse practitioner. Use the provided patient info and context to respond accurately.
+
+# Patient: {patient_name} | Diagnosis: {diagnosis} | Medications: {medications} | Discharge Date: {discharge_date}
+
+# Context:
+# {context}
+
+# Patient says:
+# {query}
+
+# Reply clearly and empathetically. If using online sources, cite them. For unknowns, recommend professional consultation.
+# And most important understand user query and reply according to it. Dont follow a single template everytime and provide reference for your every response.
+#             """
+#         )
+
+#     def set_patient_report(self, report):
+#         self.patient_report = report
+
+#     def _rag_context(self, query):
+#         vec = self.embedder.encode([query])
+#         D, I = self.index.search(np.array(vec).astype("float32"), self.k)
+#         return [self.chunks[i] for i in I[0] if i < len(self.chunks)]
+
+#     def _web_context(self, query):
+#         try:
+#             results = self.web_search.invoke(query)
+#             return [f"{r['title']}: {r['snippet']} (Source: {r['link']})" for r in results if 'title' in r and 'snippet' in r and 'link' in r]
+#         except Exception as e:
+#             logging.error(f"Web search failed: {e}")
+#             return ["Web search is currently unavailable."]
+
+#     def _get_context(self, query):
+#         rag_chunks = self._rag_context(query)
+#         joined_context = "\n\n".join(rag_chunks)
+#         if not joined_context or len(joined_context) < 100:
+#             logging.info("RAG insufficient, switching to web search")
+#             return "\n\n".join(self._web_context(query))
+#         return joined_context
+
+#     def interact(self, query):
+#         context = self._get_context(query)
+#         inputs = {
+#             "patient_name": self.patient_report.get("patient_name", "Patient"),
+#             "diagnosis": self.patient_report.get("primary_diagnosis", ""),
+#             "medications": ", ".join(self.patient_report.get("medications", [])),
+#             "discharge_date": self.patient_report.get("discharge_date", ""),
+#             "context": context,
+#             "query": query
+#         }
+#         chain = self.prompt | self.llm | StrOutputParser()
+#         return chain.invoke(inputs).strip()
+
+import logging, os, faiss, numpy as np
+from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 from langchain_groq import ChatGroq
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-import os
-from dotenv import load_dotenv
-from duckduckgo_search import DDGS
+from langchain_community.tools import DuckDuckGoSearchResults
+from langchain_community.tools.arxiv.tool import ArxivQueryRun
+from langgraph.graph import StateGraph, START, END
+from typing import TypedDict, List, Dict
+import re
 
 load_dotenv()
 
+# 1️⃣ Define structured state with TypedDict
+class ClinicalState(TypedDict):
+    query: str
+    context: str
+    context_sources: List[Dict]  # Track sources for referencing
+    patient_report: dict
+    response: str
+    search_method: str  # Track which method was used
+
+# 2️⃣ Initialize tools & models
+web_tool = DuckDuckGoSearchResults(output_format="list")
+arxiv_tool = ArxivQueryRun()
+embedder = SentenceTransformer("all-MiniLM-L6-v2")
+llm = ChatGroq(api_key=os.getenv("GROQ_API_KEY"), model="llama3-8b-8192")
+
+# 3️⃣ Enhanced prompt for LLM responses with source referencing
+prompt = ChatPromptTemplate.from_template("""
+You are Dr. Sarah, a nephrology nurse practitioner with expertise in post-discharge care.
+
+Patient Information:
+- Name: {patient_name}
+- Diagnosis: {diagnosis}
+- Current Medications: {medications}
+- Discharge Date: {discharge_date}
+
+Available Context from {search_method}:
+{context}
+
+Patient Query: {query}
+
+Instructions:
+1. Provide a clear, empathetic response addressing the patient's specific concern
+2. Base your response on the provided context when relevant
+3. ALWAYS include source references in your response using the format [Source: method]
+4. If recommending actions, be specific and practical
+5. When uncertain or for serious symptoms, recommend consulting their physician
+6. Keep responses conversational and avoid medical jargon when possible
+7. Don't repeat the same information if it's already been established in the conversation
+8. Try to find relevant context in vectorstore first, then go for web search and don't repeat you are a nephrology nurse practitioner as user know that , say user once at starting of conversation only .
+
+Response Format:
+- Address the patient's concern directly
+- Provide relevant medical information with source citations
+- Include practical next steps when appropriate
+- Always cite your sources at the end
+""")
+
+# 4️⃣ RAG retrieval with enhanced tracking
+faiss_index = faiss.read_index("data/nephro_faiss.index")
+chunks = [chunk.strip() for chunk in open("data/nephro.txt", encoding="utf-8").read().split("\n\n") if chunk.strip()]
+
+def rag_chunks(q: str) -> tuple[List[str], List[Dict]]:
+    """Return both chunks and source information"""
+    vec = embedder.encode([q])
+    distances, indices = faiss_index.search(np.array(vec).astype("float32"), 3)
+    
+    retrieved_chunks = []
+    source_info = []
+    
+    for i, idx in enumerate(indices[0]):
+        if idx < len(chunks):
+            chunk = chunks[idx]
+            retrieved_chunks.append(chunk)
+            source_info.append({
+                "type": "knowledge_base",
+                "index": idx,
+                "relevance_score": float(distances[0][i]),
+                "content_preview": chunk[:100] + "..." if len(chunk) > 100 else chunk
+            })
+    
+    return retrieved_chunks, source_info
+
+def run_context_lookup(state: ClinicalState) -> ClinicalState:
+    """Enhanced context lookup with source tracking"""
+    query = state["query"]
+    logging.info(f"Looking up context for query: {query}")
+    
+    # Try RAG first
+    retrieved_chunks, rag_sources = rag_chunks(query)
+    
+    if retrieved_chunks and len(" ".join(retrieved_chunks)) >= 100:
+        # RAG has sufficient content
+        state["context"] = "\n\n".join(retrieved_chunks)
+        state["context_sources"] = rag_sources
+        state["search_method"] = "Medical Knowledge Base"
+        logging.info("Using RAG context from knowledge base")
+        
+    else:
+        # Fall back to web search and arxiv
+        logging.info("RAG insufficient, using web search and arxiv")
+        
+        try:
+            # Web search
+            web_results = web_tool.invoke(f"nephrology {query}")
+            web_sources = []
+            web_context = []
+            
+            for r in web_results:
+                if all(k in r for k in ("title", "snippet", "link")):
+                    web_context.append(f"Title: {r['title']}\nSummary: {r['snippet']}")
+                    web_sources.append({
+                        "type": "web",
+                        "title": r['title'],
+                        "link": r['link'],
+                        "snippet": r['snippet'][:200] + "..." if len(r['snippet']) > 200 else r['snippet']
+                    })
+            
+            # ArXiv search
+            try:
+                arxiv_results = arxiv_tool.invoke(query)
+                arxiv_sources = []
+                arxiv_context = []
+                
+                if isinstance(arxiv_results, str):
+                    # Parse arxiv results if they're in string format
+                    arxiv_context.append(f"Research Reference: {arxiv_results[:500]}...")
+                    arxiv_sources.append({
+                        "type": "arxiv",
+                        "content": arxiv_results[:200] + "..." if len(arxiv_results) > 200 else arxiv_results
+                    })
+                
+            except Exception as e:
+                logging.warning(f"ArXiv search failed: {e}")
+                arxiv_context = []
+                arxiv_sources = []
+            
+            # Combine all sources
+            all_context = web_context + arxiv_context
+            all_sources = web_sources + arxiv_sources
+            
+            state["context"] = "\n\n".join(all_context) if all_context else "Limited information available."
+            state["context_sources"] = all_sources
+            state["search_method"] = "Web Search and Research Papers"
+            
+        except Exception as e:
+            logging.error(f"Web search failed: {e}")
+            state["context"] = "I'm having trouble accessing external sources right now."
+            state["context_sources"] = []
+            state["search_method"] = "Limited Resources"
+    
+    return state
+
+def run_answer(state: ClinicalState) -> ClinicalState:
+    """Generate response with proper source citations"""
+    rpt = state["patient_report"]
+    
+    # Prepare context with source information
+    context_with_sources = state["context"]
+    
+    # Add source summary for the LLM
+    if state["context_sources"]:
+        source_summary = "\n\nSource Types Used: "
+        knowledge_base_count = len([s for s in state["context_sources"] if s["type"] == "knowledge_base"])
+        web_count = len([s for s in state["context_sources"] if s["type"] == "web"])
+        arxiv_count = len([s for s in state["context_sources"] if s["type"] == "arxiv"])
+        
+        if knowledge_base_count > 0:
+            source_summary += f"{knowledge_base_count} medical knowledge base entries, "
+        if web_count > 0:
+            source_summary += f"{web_count} web sources, "
+        if arxiv_count > 0:
+            source_summary += f"{arxiv_count} research papers, "
+        
+        source_summary = source_summary.rstrip(", ")
+        context_with_sources += source_summary
+    
+    chain = prompt | llm | StrOutputParser()
+    
+    raw_response = chain.invoke({
+        "patient_name": rpt.get("patient_name", "Patient"),
+        "diagnosis": rpt.get("primary_diagnosis", ""),
+        "medications": ", ".join(rpt.get("medications", [])),
+        "discharge_date": rpt.get("discharge_date", ""),
+        "context": context_with_sources,
+        "query": state["query"],
+        "search_method": state["search_method"]
+    }).strip()
+    
+    # Add source citations to the response
+    response_with_citations = raw_response
+    
+    if state["context_sources"]:
+        citation_text = "\n\n📚 **Sources:** "
+        
+        # Group sources by type
+        kb_sources = [s for s in state["context_sources"] if s["type"] == "knowledge_base"]
+        web_sources = [s for s in state["context_sources"] if s["type"] == "web"]
+        arxiv_sources = [s for s in state["context_sources"] if s["type"] == "arxiv"]
+        
+        citations = []
+        
+        if kb_sources:
+            citations.append(f"Medical Knowledge Base ({len(kb_sources)} entries)")
+        
+        if web_sources:
+            # Show specific web sources
+            for i, source in enumerate(web_sources[:2]):  # Limit to first 2 web sources
+                citations.append(f"Web: {source['title']} ({source['link']})")
+        
+        if arxiv_sources:
+            citations.append(f"Research Papers ({len(arxiv_sources)} papers)")
+        
+        if citations:
+            citation_text += "; ".join(citations)
+            response_with_citations += citation_text
+    
+    else:
+        response_with_citations += "\n\n⚠️ **Note:** Response based on general medical knowledge. For personalized advice, please consult your healthcare provider."
+    
+    state["response"] = response_with_citations
+    return state
+
+def build_graph():
+    """Build the clinical agent graph"""
+    g = StateGraph(ClinicalState)
+    g.add_node("ContextLookup", run_context_lookup)
+    g.add_node("Answer", run_answer)
+    g.add_edge(START, "ContextLookup")
+    g.add_edge("ContextLookup", "Answer")
+    g.add_edge("Answer", END)
+    return g.compile()
+
 class ClinicalAgent:
     def __init__(self):
-        self.FAISS_INDEX_PATH = "data/nephro_faiss.index"
-        self.NEPHRO_TXT_PATH = "data/nephro.txt"
-        self.GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-        self.patient_report = None
-        self.k = 3
-        self.conversation_memory = []
-        self._load_components()
-
-    def _load_components(self):
-        """Load all necessary components for the clinical agent."""
-        try:
-            # Load text chunks
-            with open(self.NEPHRO_TXT_PATH, "r", encoding="utf-8") as f:
-                self.chunks = [chunk.strip() for chunk in f.read().split("\n\n") if chunk.strip()]
-            
-            # Load FAISS index
-            self.index = faiss.read_index(self.FAISS_INDEX_PATH)
-            
-            # Initialize embedding model
-            self.model = SentenceTransformer("all-MiniLM-L6-v2")
-            
-            # Initialize LLM
-            self.llm = ChatGroq(
-                api_key=self.GROQ_API_KEY, 
-                model="llama3-8b-8192",
-                temperature=0.7,  # More natural responses
-                max_tokens=500
-            )
-            
-            # Create conversational prompt template
-            self._create_prompt_templates()
-            
-            logging.info("Clinical Agent components loaded successfully")
-            
-        except Exception as e:
-            logging.error(f"Error loading clinical components: {e}")
-            raise
-
-    def _create_prompt_templates(self):
-        """Create sophisticated prompt templates for natural conversation."""
+        self.graph = build_graph()
+        self.conversation_history = []  # Track conversation for context
         
-        # Main conversation prompt
-        self.conversation_prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are Dr. Sarah, a warm and experienced nephrology nurse practitioner. You have years of experience helping kidney patients after discharge. Your role is to:
-
-- Provide compassionate, personalized medical guidance
-- Use the patient's medical context naturally in conversation
-- Reference medical literature when helpful, but explain in simple terms
-- Show genuine concern for the patient's wellbeing
-- Ask thoughtful follow-up questions to better understand their situation
-- Always remind patients to contact their healthcare team for urgent concerns
-
-Patient Context:
-Name: {patient_name}
-Diagnosis: {diagnosis}
-Current Medications: {medications}
-Discharge Date: {discharge_date}
-
-Key Guidelines:
-- Speak naturally and conversationally, like you're talking to a real patient
-- Use the patient's name when appropriate
-- Reference their specific condition and medications when relevant
-- Be encouraging and supportive
-- Never sound robotic or templated"""),
-            
-            MessagesPlaceholder(variable_name="conversation_history"),
-            
-            ("human", "{current_message}"),
-            
-            ("system", "Medical Reference Context (use naturally if relevant):\n{medical_context}")
-        ])
-
-        # Follow-up question generator
-        self.followup_prompt = ChatPromptTemplate.from_messages([
-            ("system", """Based on the patient's message and medical context, generate ONE natural follow-up question that shows you care about their wellbeing. Make it specific to their situation.
-
-Patient: {patient_name} - {diagnosis}
-Their message: {patient_message}
-
-Generate a caring, specific follow-up question (just the question, nothing else):"""),
-            ("human", "{patient_message}")
-        ])
-
-    def set_patient_report(self, report):
-        """Set patient report and log the action."""
+    def set_patient_report(self, report: dict):
         self.patient_report = report
-        patient_name = report.get('patient_name', 'Unknown') if report else 'Unknown'
-        logging.info(f"Clinical Agent: Patient context set for {patient_name}")
 
-    def _get_patient_context(self):
-        """Extract patient context for prompts."""
-        if not self.patient_report:
-            return {
-                'patient_name': 'the patient',
-                'diagnosis': 'kidney condition',
-                'medications': 'medications as prescribed',
-                'discharge_date': 'recent discharge'
-            }
+    def interact(self, query: str) -> str:
+        """Main interaction method with conversation tracking"""
+        # Create state for this interaction
+        state = ClinicalState(
+            query=query,
+            context="",
+            context_sources=[],
+            patient_report=self.patient_report,
+            response="",
+            search_method=""
+        )
         
-        return {
-            'patient_name': self.patient_report.get('patient_name', 'the patient'),
-            'diagnosis': self.patient_report.get('primary_diagnosis', 'kidney condition'),
-            'medications': ', '.join(self.patient_report.get('medications', ['medications as prescribed'])),
-            'discharge_date': self.patient_report.get('discharge_date', 'recent discharge')
-        }
-
-    def retrieve_from_rag(self, query):
-        """Retrieve relevant medical information using RAG."""
-        try:
-            query_vec = self.model.encode([query])
-            D, I = self.index.search(np.array(query_vec).astype("float32"), self.k)
-            
-            retrieved_chunks = []
-            for i in I[0]:
-                if i < len(self.chunks):
-                    retrieved_chunks.append(self.chunks[i])
-            
-            logging.info(f"RAG retrieval: Found {len(retrieved_chunks)} relevant chunks")
-            return retrieved_chunks
-            
-        except Exception as e:
-            logging.error(f"RAG retrieval error: {e}")
-            return []
-
-    def _search_web(self, query, num_results=2):
-        """Search DuckDuckGo for medical information."""
-        try:
-            results = []
-            with DDGS() as ddgs:
-                search_results = list(ddgs.text(
-                    f"nephrology kidney {query}", 
-                    region='wt-wt', 
-                    safesearch='moderate', 
-                    max_results=num_results
-                ))
-                
-                for result in search_results:
-                    title = result.get('title', '')
-                    body = result.get('body', '')
-                    source = result.get('href', '')
-                    results.append(f"• {title}: {body[:200]}... (Source: {source})")
-            
-            web_context = "\n".join(results)
-            logging.info(f"Web search completed: {len(results)} results found")
-            return web_context
-            
-        except Exception as e:
-            logging.error(f"Web search error: {e}")
-            return "Web search temporarily unavailable."
-
-    def _should_use_web_search(self, query, rag_results):
-        """Determine if web search is needed."""
-        # Use web search if RAG results are insufficient
-        if not rag_results or len(" ".join(rag_results)) < 100:
-            return True
+        # Add conversation history context if available
+        if self.conversation_history:
+            # Add recent conversation context to help avoid repetition
+            recent_context = "\n".join([
+                f"Previous: {entry['query']} -> {entry['response'][:100]}..."
+                for entry in self.conversation_history[-2:]  # Last 2 exchanges
+            ])
+            state["query"] = f"Recent conversation:\n{recent_context}\n\nCurrent query: {query}"
         
-        # Use web search for recent/current information
-        recent_keywords = ['latest', 'recent', 'new', 'current', 'breakthrough', 'update', 'today']
-        return any(keyword in query.lower() for keyword in recent_keywords)
-
-    def _manage_conversation_memory(self, user_message, ai_response):
-        """Manage conversation memory efficiently."""
-        self.conversation_memory.append(HumanMessage(content=user_message))
-        self.conversation_memory.append(AIMessage(content=ai_response))
+        # Run the graph
+        final_state = self.graph.invoke(state)
         
-        # Keep only last 10 messages (5 exchanges)
-        if len(self.conversation_memory) > 10:
-            self.conversation_memory = self.conversation_memory[-10:]
-
-    def _handle_conversation_references(self, user_input):
-        """Handle questions about the conversation history."""
-        conversation_keywords = [
-            "what did i just say", "what did i tell you", "what was my last question",
-            "what did i ask", "repeat my last message", "what was my previous question"
-        ]
+        # Store in conversation history
+        self.conversation_history.append({
+            "query": query,
+            "response": final_state["response"],
+            "sources": final_state["context_sources"]
+        })
         
-        if any(keyword in user_input.lower() for keyword in conversation_keywords):
-            # Find the last user message
-            for message in reversed(self.conversation_memory):
-                if isinstance(message, HumanMessage):
-                    return f"You just asked me: \"{message.content}\""
-            return "I don't see any previous messages from you in our conversation."
+        # Keep only last 5 exchanges to prevent memory bloat
+        if len(self.conversation_history) > 5:
+            self.conversation_history = self.conversation_history[-5:]
         
-        return None
-
-    def interact(self, user_input):
-        """Main interaction method with natural conversation flow."""
-        logging.info(f"Clinical Agent processing: {user_input[:100]}...")
-        
-        try:
-            # Handle conversation references
-            conv_response = self._handle_conversation_references(user_input)
-            if conv_response:
-                self._manage_conversation_memory(user_input, conv_response)
-                return conv_response
-
-            # Get medical context through RAG
-            rag_results = self.retrieve_from_rag(user_input)
-            medical_context = "\n\n".join(rag_results)
-            
-            # Use web search if needed
-            if self._should_use_web_search(user_input, rag_results):
-                web_results = self._search_web(user_input)
-                medical_context = f"Recent Information:\n{web_results}\n\nReference Material:\n{medical_context}"
-                logging.info("Using web search results for context")
-
-            # Get patient context
-            patient_context = self._get_patient_context()
-
-            # Prepare input for the prompt
-            prompt_input = {
-                "conversation_history": self.conversation_memory[-8:],  # last 4 exchanges
-                "medical_context": medical_context,
-                "patient_name": patient_context['patient_name'],
-                "diagnosis": patient_context['diagnosis'],
-                "medications": patient_context['medications'],
-                "discharge_date": patient_context['discharge_date'],
-                "current_message": user_input
-            }
-
-            # Create the conversation chain
-            chain = self.conversation_prompt | self.llm | StrOutputParser()
-            response = chain.invoke(prompt_input)
-
-            # Generate follow-up question
-            followup_chain = self.followup_prompt | self.llm | StrOutputParser()
-            followup = followup_chain.invoke({
-                "patient_message": user_input,
-                **patient_context
-            })
-
-            # Clean up responses
-            response = response.strip()
-            followup = followup.strip()
-
-            # Combine response with follow-up
-            if followup and not followup.lower().startswith('based on'):
-                full_response = f"{response}\n\n{followup}"
-            else:
-                full_response = response
-
-            # Manage conversation memory
-            self._manage_conversation_memory(user_input, full_response)
-            
-            logging.info("Clinical Agent: Response generated successfully")
-            return full_response
-
-        except Exception as e:
-            logging.error(f"Clinical Agent error: {e}")
-            error_response = "I'm having some technical difficulties right now. For any urgent medical concerns, please contact your healthcare provider immediately."
-            self._manage_conversation_memory(user_input, error_response)
-            return error_response
-
-    def get_conversation_summary(self):
-        """Get a summary of the current conversation."""
-        if not self.conversation_memory:
-            return "No conversation history available."
-        
-        # Create a simple summary of recent exchanges
-        recent_topics = []
-        for msg in self.conversation_memory[-6:]:  # Last 3 exchanges
-            if isinstance(msg, HumanMessage):
-                recent_topics.append(f"Patient asked about: {msg.content[:50]}...")
-        
-        return "Recent discussion topics:\n" + "\n".join(recent_topics) if recent_topics else "No recent topics to summarize."
+        return final_state["response"]

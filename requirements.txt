@@ -12,6 +12,7 @@ requests
 # LLMs and API integrations
 langchain-groq
 tavily-python
+arxiv
 
 # Data processing
 pypdf
