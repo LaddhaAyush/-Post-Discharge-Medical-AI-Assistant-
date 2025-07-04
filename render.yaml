@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: post-discharge-ai-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend_api:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    healthCheckPath: /health
+
+  - type: web
+    name: post-discharge-ai-frontend
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: post-discharge-ai-backend
+          property: host
+      - key: PYTHON_VERSION
+        value: 3.11.0

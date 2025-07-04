@@ -1,7 +1,11 @@
 import streamlit as st
 import requests
+import os
 
-API_URL = "http://localhost:8000"
+# Get backend URL from environment variable for deployment
+API_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+if not API_URL.startswith("http"):
+    API_URL = f"https://{API_URL}"
 
 # Session State Initialization
 if "chat_history" not in st.session_state:

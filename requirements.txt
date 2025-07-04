@@ -29,6 +29,7 @@ python-dotenv
 # API
 fastapi
 uvicorn
+pydantic
 
 # Web Search API (Optional fallback)
 duckduckgo-search
