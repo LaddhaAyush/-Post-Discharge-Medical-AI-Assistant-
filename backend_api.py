@@ -88,6 +88,18 @@ def get_or_create_receptionist_agent(session_id: str) -> ReceptionistAgent:
         }
     return agents_storage[session_id]["receptionist"]
 
+def reset_receptionist_agent(session_id: str) -> ReceptionistAgent:
+    """Reset the receptionist agent for a new conversation"""
+    if session_id not in agents_storage:
+        agents_storage[session_id] = {
+            "receptionist": ReceptionistAgent(),
+            "clinical": ClinicalAgent()
+        }
+    else:
+        agents_storage[session_id]["receptionist"] = ReceptionistAgent()
+    logging.info(f"Reset receptionist agent for session {session_id}")
+    return agents_storage[session_id]["receptionist"]
+
 def get_or_create_clinical_agent(session_id: str) -> ClinicalAgent:
     if session_id not in agents_storage:
         agents_storage[session_id] = {
@@ -110,7 +122,9 @@ def root():
             "receptionist": "/chat/receptionist",
             "clinical": "/chat/clinical",
             "patient_lookup": "/patients/{name}",
-            "health_check": "/health"
+            "health_check": "/health",
+            "clear_session": "/session/{session_id}",
+            "reset_conversation": "/session/{session_id}/reset"
         }
     }
 
@@ -144,6 +158,16 @@ def chat_receptionist(req: ChatRequest):
     try:
         receptionist_agent = get_or_create_receptionist_agent(req.session_id)
         response, status = receptionist_agent.interact(req.user_input, session_id=req.session_id)
+
+        # If conversation ended, reset the agent for the next user
+        if status == 'conversation_ended':
+            # Reset the receptionist agent for new conversation
+            agents_storage[req.session_id]["receptionist"] = ReceptionistAgent()
+            logging.info(f"Reset receptionist agent for session {req.session_id} after conversation ended")
+        
+        # Also reset if a new conversation started mid-way (detected by the agent)
+        elif receptionist_agent.state == 'ask_name' and receptionist_agent.conversation_stage == 'initial':
+            logging.info(f"Detected agent was reset during interaction for session {req.session_id}")
 
         chat_response = ChatResponse(
             response=response,
@@ -198,6 +222,19 @@ def clear_session(session_id: str):
         return {"message": f"Session {session_id} cleared successfully"}
     else:
         raise HTTPException(status_code=404, detail="Session not found")
+
+@app.post("/session/{session_id}/reset")
+def reset_session_conversation(session_id: str):
+    """Reset the conversation for a new patient while keeping the session alive"""
+    try:
+        reset_receptionist_agent(session_id)
+        # Also reset clinical agent if needed
+        if session_id in agents_storage:
+            agents_storage[session_id]["clinical"] = ClinicalAgent()
+        return {"message": f"Conversation reset for session {session_id}. Ready for new patient."}
+    except Exception as e:
+        logging.error(f"Error resetting session {session_id}: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error during reset")
 
 @app.get("/sessions")
 def list_sessions():
